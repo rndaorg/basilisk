@@ -27,7 +27,7 @@ rwList = []
 def create(
         gsHat_B,
         Js,
-        uMax = numpy.NaN
+        uMax = numpy.nan
     ):
     """
     Create a FSW RW object
@@ -84,7 +84,6 @@ def writeConfigMessage():
     rwConfigParams.uMax = uMaxList
     rwConfigParams.numRW = len(rwList)
     rwConfigMsg = messaging.RWArrayConfigMsg().write(rwConfigParams)
-    rwConfigMsg.this.disown()
 
     return rwConfigMsg
 

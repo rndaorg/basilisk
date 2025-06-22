@@ -34,18 +34,22 @@ CppModuleTemplate::~CppModuleTemplate()
 
 
 /*! This method is used to reset the module.
-    @return void
+
  */
 void CppModuleTemplate::Reset(uint64_t CurrentSimNanos)
 {
     /*! - reset any required variables */
     this->dummy = 0.0;
     bskLogger.bskLog(BSK_INFORMATION, "Variable dummy set to %f in reset.",this->dummy);
+
+    /* zero output message on reset */
+    CModuleTemplateMsgPayload outMsgBuffer={};       /*!< local output message copy */
+    this->dataOutMsg.write(&outMsgBuffer, this->moduleID, CurrentSimNanos);
 }
 
 
 /*! This is the main method that gets called every time the module is updated.  Provide an appropriate description.
-    @return void
+
  */
 void CppModuleTemplate::UpdateState(uint64_t CurrentSimNanos)
 {
@@ -79,4 +83,26 @@ void CppModuleTemplate::UpdateState(uint64_t CurrentSimNanos)
      quick-start guide which module is being executed */
     bskLogger.bskLog(BSK_INFORMATION, "C++ Module ID %lld ran Update at %fs", this->moduleID, (double) CurrentSimNanos/(1e9));
 
+}
+
+void CppModuleTemplate::setDummy(double value)
+{
+    // check that value is in acceptable range
+    if (value > 0) {
+        this->dummy = value;
+    } else {
+        bskLogger.bskLog(BSK_ERROR, "CppModuleTemplate: dummy variable must be strictly positive, you tried to set %f", value);
+    }
+}
+
+void CppModuleTemplate::setDumVector(std::array<double, 3> value)
+{
+    // check that value is in acceptable range
+    for (int i = 0; i < 3; i++) {
+        if (value[i] <= 0.0) {
+            bskLogger.bskLog(BSK_ERROR, "CppModuleTemplate: dumVariable variables must be strictly positive");
+            return;
+        }
+    }
+    this->dumVector = value;
 }

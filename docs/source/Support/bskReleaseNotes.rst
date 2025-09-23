@@ -26,12 +26,28 @@ Basilisk Release Notes
 
 Version |release|
 -----------------
+- Removed deprecated use of astro constants from ``src/utilities/astroFunction.py``.
+  Users should be astrodynamics constants from ``Basilisk.architecture.astroConstants``.
+- Made statistical unit tests more robust
+- Added fault modeling capability to :ref:`magnetometer` module.
+- Added new module :ref:`MJSystemCoM` to extract the system center of mass position and velocity from a MuJoCo simulation.
+- Refactored the CI build system scripts
+- Removed deprecated use of ``Basilisk.simulation.planetEphemeris.ClassicElementsMsgPayload``.
+  Users need to use ``ClassicalElements()`` defined in ``orbitalMotion``.
+- Fixed bug with recording message payload entries that are 2D arrays. This bug was introduced with the faster recording
+  strategy added in version 2.78.0.
+
+
+Version 2.78.0 (August 30, 2025)
+--------------------------------
 - Marked the use of python 3.8 as deprecated
 - Support for ``opNavMode`` flag within vizSupport was removed, as its deprecation period ended
 - Demo video was added to :ref:`scenarioQuadMaps` documentation
 - Pinned python dependencies to avoid issues with new package versions.
+- Updated :ref:`vscmgStateEffector` documentation.
+- Added a new :ref:`vscmgGimbalRateServo` module that computes the VSCMG wheel motor torque and gimbal motor torque.
+- Added a new :ref:`vscmgVelocitySteering` module that computes the desired VSCMG wheel accelerations and gimbal rates.
 - Added a new github workflow job ``canary`` to routinely check the compatibility of latest python dependencies with python 3.13 on the latest mac-os.
-- Fixed a bug in :ref:`spiceInterface` where multiple instances of the module were not properly managing SPICE kernel references, leading to potential conflicts and data corruption.
 - Deprecated :ref:`SpacecraftSystem`.  It was never completed and we have other ways to connect spacecraft components
 - Allow event conditions and effects to be defined by functions. This is preferred over the old string-based method, as it
   enables the use of arbitrary packages and objects in events and allows for event code to be parsed by IDE tools.
@@ -43,9 +59,51 @@ Version |release|
 - Enhance how ``uint64_t`` values are converted to doubles.  BSK now warns if the time value is large enough such
   that the conversion method has a loss of precision in this process.
 - Support including an eclipse message in :ref:`SpacecraftLocation` to more accurately determine illumination.
-- Fixed a bug in :ref:`spiceInterface` where required kernels were being unloaded before they were no longer needed.
 - Fixed an issue where the :ref:`spaceToGroundTransmitter` would check for the amount of data remaining in a different partition than the one being downlinked.
 - Fixed an issue where a high baud rate prevented the :ref:`spaceToGroundTransmitter` from downlinking data from the :ref:`simpleStorageUnit` or :ref:`partitionedStorageUnit`.
+- Updated default Windows compiler to be ``Visual Studio 17 2022``.  The CI test build now occurs on Windows 11.
+
+  .. warning::
+
+    If you still want to use Visual Studio 16, then be sure to set the generator
+    using ``python conanfile.py --generator "Visual Studio 16 2019``
+
+- Improve reading speed of recorded messages by about 75%.
+- Added support for Vizard 2.3.0
+- Adds support for updating noise parameters in :ref:`simpleNav` during simulation
+- Redirected MuJoCo errors and warnings to :ref:`bskLogging` instead of printing to file.
+- Update :ref:`vizSupport`  for the ``saveFile`` argument to take an explicit
+  file path and file name and not auto-generate the ``_VizFiles`` sub-folder.  This provides the
+  user more direct control where and how the simulation data is saved.
+- Support calling ``unsubscribe`` on input messages.
+- Fixed an issue where the :ref:`forceTorqueThrForceMapping` module's Reset() function did not zero all thruster settings correctly.
+- Updated ``canary`` workflow to run on all pull requests to the develop branch, providing feedback on compatibility with latest dependencies.
+- Added links to published paper in :ref:`oneAxisSolarArrayPoint` documentation.
+- Converted RW data structures in ``reactionWheelStateEffector`` to shared pointers instead of raw pointers.
+- The ``BSKLogger`` now raises a ``BasiliskError`` (``Basilisk.architecture.bskLogging.BasiliskError``)
+  if something is logged at ``BSK_ERROR`` level. Certain errors are reduced to ``BSK_WARNING`` to reflect
+  the new behavior.
+- Improve reading speed of recorded messages by 1-4 orders of magnitude.
+
+  .. warning::
+
+    This is a breaking change, see list of known issues for details. Please report any issues
+    (at buildtime or runtime) with recorders for custom payloads.
+- Support initialization of fields in the constructor of message payloads (in Python).
+- Improve string representation of message payloads (in Python).
+- Add support for pretty-printing message payloads (in Python).
+- Updated documentation and all scenarios to use new payload constructor format.
+- Add :ref:`scenarioBranchingPanels`, which showcases a branching solar array configuration, staged deployment,
+  and joint locking when panels are stowed or fully deployed.
+- Bugfix: joint velocity not being reported correctly in ``MJScalarJoint``.
+- Add ``addJointSingleActuator`` to ``MJScene``. This can be used to add actuators acting on joints
+  to a MuJoCo-based simulation (e.g. motors that produce torque).
+- Add method to scalar joints class to get to the equality constraint object that can be used to constrain
+  the joint to a specific value (``MJScalarJoint::getConstrainedEquality``).
+- Add methods ``setSolref`` and ``setSolimp`` to ``MJEquality`` to enable control of the solver parameters
+  that control how the equalities are enforced in MuJoCo.
+- Add PID controller models for ``MJScene``. Currently implemented ``JointPIDController``, which can read the state
+  of a joint and output a torque to act on said joint to achieve a desired angle and angular velocity.
 
 
 Version 2.7.0 (April 20, 2025)
@@ -159,7 +217,6 @@ Version  2.6.0  (Feb. 21, 2025)
 
     You have to upgrade your python ``conan`` package to be able to build Basilisk.
     Use ``python install --upgrade conan``.
-
 - Added support for subclassing ``StateData`` and overloading certain methods. This enables support for custom state
   behavior, such as quaternions, which have size 4 but their derivative is size 3. This is done in preparation of
   a future MuJoCo integration. Note the warning below regarding SWIG files for ``dynamicEffector`` and ``stateEffector``.

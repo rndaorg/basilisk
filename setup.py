@@ -91,9 +91,10 @@ class BuildConanExtCommand(Command, SubCommand):
     def run(self) -> None:
         for ext in self.conan_extensions:
             if self.editable_mode:
-                # TODO: Add support for installing in editable mode. For now, we
-                # assume that it has already been built (e.g. by `conanfile.py`)
-                pass
+                # TODO: Add support for installing in editable mode.
+                built = any(Path(ext.build_dir).glob("Basilisk*"))
+                if not built:
+                    run([sys.executable, ext.conanfile] + ext.args, check=True)
             else:
                 # Call the underlying Conanfile with the desired arguments.
                 run([sys.executable, ext.conanfile] + ext.args, check=True)
@@ -103,6 +104,9 @@ class BuildConanExtCommand(Command, SubCommand):
                 pkg_dir = Path(ext.build_dir, *pkg.split("."))
                 self.distribution.packages.append(pkg)
                 self.distribution.package_dir[pkg] = os.path.relpath(pkg_dir, start=HERE)
+
+                pd = self.distribution.package_data.setdefault(pkg, [])
+                pd += ["*.dll", "**/*.dll", "*.pyd", "**/*.pyd"]
 
         if self.editable_mode and len(self.distribution.packages) == 0:
             raise Exception("Tried to install in editable mode, but packages have not been prepared yet! " \
@@ -145,4 +149,6 @@ setup(
 
     # XXX: Override build_ext with ConanExtension builder.
     cmdclass={'build_ext': BuildConanExtCommand},
+    zip_safe=False,
+    include_package_data=True,
 )
